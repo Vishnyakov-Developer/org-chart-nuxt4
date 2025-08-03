@@ -1,12 +1,11 @@
 <template>
   <div class="org-chart-page">
-    ddd
-    <OrgChartWidget />
+    <OrgChart />
   </div>
 </template>
 
 <script setup>
-import OrgChartWidget from '~/widgets/org-chart/index.vue'
+import OrgChart from '../widgets/org-chart/components/OrgChart.vue'
 </script>
 
 <style scoped>

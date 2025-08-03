@@ -16,7 +16,6 @@
         >arrow_drop_down</i
       >
     </div>
-    <side-screen v-if="chart" />
     <show-person v-if="showPerson" />
   </div>
 </template>
@@ -27,9 +26,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOrgChartStore } from './stores/orgChart'
 
 // Components
-
 import OrgChart from './components/OrgChart.vue'
-import SideScreen from './components/SideScreen.vue'
 import EditMenu from './components/EditMenu.vue'
 import ShowPerson from './components/ShowPerson.vue'
 
@@ -128,15 +125,16 @@ const getUrl = (qry) => {
 
 // Lifecycle
 onMounted(() => {
+  console.log('OrgChartWidget mounted')
+
   // Инициализируем store
-  store.initStore()
+  store.initializeStore()
 
-  // Устанавливаем активный департамент из chart
+  // Устанавливаем активный департамент
   if (store.chart) {
-    store.setActiveDepartment(store.chart)
+    activeDepartment.value = store.chart
+    console.log('Active department set to:', activeDepartment.value)
   }
-
-  getUrl(route.query)
 })
 </script>
 
@@ -175,13 +173,20 @@ body {
 }
 
 .p-container {
-  width: 100%;
+  width: 80dvw;
   height: 100%;
+  overflow: hidden;
+  border: 1px solid red;
+  position: relative;
 }
 
 .container1 {
   position: relative;
-  width: 100%;
+
+  width: 16000px;
   height: calc(100% - 60px);
+  overflow: hidden;
+  background: white;
+  transform-origin: 0 0;
 }
 </style>

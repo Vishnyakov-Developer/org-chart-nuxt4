@@ -1,7 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import panzoom from 'panzoom'
+import * as panzoomModule from 'panzoom'
 import _ from 'lodash'
+
+// Проверяем импорт panzoom
+const panzoom = panzoomModule.default || panzoomModule
+console.log('Panzoom import check:', {
+  panzoomModule,
+  panzoom,
+  type: typeof panzoom
+})
 
 // Глобальные переменные (будут загружены из внешних файлов)
 let CONFIG = {
@@ -28,95 +36,540 @@ let UINAMES = {
     departmentHierarchy: 'Hierarchy'
   }
 }
-let INPUT_DATA = {
+// Тестовые данные
+const INPUT_DATA = ref({
   api_version: '2.0',
   chart: {
     id: '1',
-    name: 'Test Company',
+    name: 'Директор подразделения',
+    description: 'Руководитель всего подразделения',
     manager: {
-      id: '1',
-      name: 'CEO',
+      name: 'Иванков Игорь Валерьевич',
+      title: 'Директор',
       photo: null
     },
     children: [
       {
         id: '2',
-        name: 'Engineering',
+        name: 'Зам. по механизации',
+        description: 'Заместитель по механизации',
         manager: {
-          id: '2',
-          name: 'CTO',
+          name: 'Гусаров Сергей Петрович',
+          title: 'Заместитель',
           photo: null
         },
         children: [
           {
-            id: '3',
-            name: 'Frontend',
+            id: '2_1',
+            name: 'Отдел механики 1',
+            description: 'Первый отдел механики',
             manager: {
-              id: '3',
-              name: 'Frontend Lead',
+              name: 'Александр Александрович Александров',
+              title: 'Начальник отдела',
               photo: null
             },
             children: [],
-            employees: [],
             showChildren: false,
-            showParents: true,
-            dataFields: []
+            showParents: false,
+            isStaff: false,
+            parent: null
           },
           {
-            id: '4',
-            name: 'Backend',
+            id: '2_2',
+            name: 'Отдел механики 2',
+            description: 'Второй отдел механики',
             manager: {
-              id: '4',
-              name: 'Backend Lead',
+              name: 'Борис Борисович Борисов',
+              title: 'Начальник отдела',
               photo: null
             },
             children: [],
-            employees: [],
             showChildren: false,
-            showParents: true,
-            dataFields: []
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '2_3',
+            name: 'Отдел механики 3',
+            description: 'Третий отдел механики',
+            manager: {
+              name: 'Владимир Владимирович Владимиров',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [],
+            showChildren: false,
+            showParents: false,
+            isStaff: false,
+            parent: null
           }
         ],
-        employees: [],
-        showChildren: false,
-        showParents: true,
-        dataFields: []
+        showChildren: true,
+        showParents: false,
+        isStaff: false,
+        parent: null
       },
       {
-        id: '5',
-        name: 'Marketing',
+        id: '3',
+        name: 'Главный инженер',
+        description: 'Главный инженер подразделения',
         manager: {
-          id: '5',
-          name: 'CMO',
+          name: 'Иван Алексеевич Павлов',
+          title: 'Главный инженер',
           photo: null
         },
-        children: [],
-        employees: [],
-        showChildren: false,
-        showParents: true,
-        dataFields: []
+        children: [
+          {
+            id: '4',
+            name: 'Охрана труда - Группа 1',
+            description: 'Группа охраны труда 1',
+            manager: {
+              name: 'Георгий Георгиевич Георгиев',
+              title: 'Руководитель группы',
+              photo: null
+            },
+            children: [
+              {
+                id: '4_1',
+                name: 'Подгруппа 1.1',
+                description: 'Первая подгруппа',
+                manager: {
+                  name: 'Дмитрий Дмитриевич Дмитриев',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '4_2',
+                name: 'Подгруппа 1.2',
+                description: 'Вторая подгруппа',
+                manager: {
+                  name: 'Евгений Евгеньевич Евгеньев',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '5',
+            name: 'Охрана труда - Группа 2',
+            description: 'Группа охраны труда 2',
+            manager: {
+              name: 'Фёдор Фёдорович Фёдоров',
+              title: 'Руководитель группы',
+              photo: null
+            },
+            children: [
+              {
+                id: '5_1',
+                name: 'Подгруппа 2.1',
+                description: 'Первая подгруппа',
+                manager: {
+                  name: 'Захар Захарович Захаров',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '5_2',
+                name: 'Подгруппа 2.2',
+                description: 'Вторая подгруппа',
+                manager: {
+                  name: 'Игорь Игоревич Игорев',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '5_3',
+                name: 'Подгруппа 2.3',
+                description: 'Третья подгруппа',
+                manager: {
+                  name: 'Константин Константинович Константинов',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '6',
+            name: 'Охрана труда - Группа 3',
+            description: 'Группа охраны труда 3',
+            manager: {
+              name: 'Роман Романович Романов',
+              title: 'Руководитель группы',
+              photo: null
+            },
+            children: [
+              {
+                id: '6_1',
+                name: 'Подгруппа 3.1',
+                description: 'Первая подгруппа',
+                manager: {
+                  name: 'Леонид Леонидович Леонидов',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '6_2',
+                name: 'Подгруппа 3.2',
+                description: 'Вторая подгруппа',
+                manager: {
+                  name: 'Михаил Михайлович Михайлов',
+                  title: 'Руководитель подгруппы',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '7',
+            name: 'Отдел разработки',
+            description: 'Отдел разработки проектов',
+            manager: {
+              name: 'Николай Николаевич Николаев',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [
+              {
+                id: '7_1',
+                name: 'Команда разработки 1',
+                description: 'Первая команда разработки',
+                manager: {
+                  name: 'Олег Олегович Олегов',
+                  title: 'Руководитель команды',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '7_2',
+                name: 'Команда разработки 2',
+                description: 'Вторая команда разработки',
+                manager: {
+                  name: 'Павел Павлович Павлов',
+                  title: 'Руководитель команды',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '7_3',
+                name: 'Команда разработки 3',
+                description: 'Третья команда разработки',
+                manager: {
+                  name: 'Руслан Русланович Русланов',
+                  title: 'Руководитель команды',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          }
+        ],
+        showChildren: true,
+        showParents: false,
+        isStaff: false,
+        parent: null
+      },
+      {
+        id: '8',
+        name: 'Зам. по кадрам',
+        description: 'Заместитель по кадрам',
+        manager: {
+          name: 'Алексей Романович Лебедев',
+          title: 'Заместитель',
+          photo: null
+        },
+        children: [
+          {
+            id: '8_1',
+            name: 'Отдел кадров',
+            description: 'Отдел кадрового делопроизводства',
+            manager: {
+              name: 'Сергей Сергеевич Сергеев',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [
+              {
+                id: '8_1_1',
+                name: 'Сектор приема',
+                description: 'Сектор приема на работу',
+                manager: {
+                  name: 'Тимофей Тимофеевич Тимофеев',
+                  title: 'Руководитель сектора',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '8_1_2',
+                name: 'Сектор увольнения',
+                description: 'Сектор увольнения',
+                manager: {
+                  name: 'Ульяна Ульяновна Ульянова',
+                  title: 'Руководитель сектора',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '8_2',
+            name: 'Отдел обучения',
+            description: 'Отдел обучения персонала',
+            manager: {
+              name: 'Филипп Филиппович Филиппов',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [],
+            showChildren: false,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          }
+        ],
+        showChildren: true,
+        showParents: false,
+        isStaff: false,
+        parent: null
+      },
+      {
+        id: '9',
+        name: 'Зам. по финансам',
+        description: 'Заместитель по финансовым вопросам',
+        manager: {
+          name: 'Харитон Харитонович Харитонов',
+          title: 'Заместитель',
+          photo: null
+        },
+        children: [
+          {
+            id: '9_1',
+            name: 'Бухгалтерия',
+            description: 'Бухгалтерский отдел',
+            manager: {
+              name: 'Цезарь Цезаревич Цезарев',
+              title: 'Главный бухгалтер',
+              photo: null
+            },
+            children: [
+              {
+                id: '9_1_1',
+                name: 'Сектор расчетов',
+                description: 'Сектор расчетов с персоналом',
+                manager: {
+                  name: 'Шамиль Шамилевич Шамилев',
+                  title: 'Руководитель сектора',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              },
+              {
+                id: '9_1_2',
+                name: 'Сектор отчетности',
+                description: 'Сектор финансовой отчетности',
+                manager: {
+                  name: 'Эдуард Эдуардович Эдуардов',
+                  title: 'Руководитель сектора',
+                  photo: null
+                },
+                children: [],
+                showChildren: false,
+                showParents: false,
+                isStaff: false,
+                parent: null
+              }
+            ],
+            showChildren: true,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '9_2',
+            name: 'Планово-экономический отдел',
+            description: 'Планово-экономический отдел',
+            manager: {
+              name: 'Юрий Юрьевич Юрьев',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [],
+            showChildren: false,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          }
+        ],
+        showChildren: true,
+        showParents: false,
+        isStaff: false,
+        parent: null
+      },
+      {
+        id: '10',
+        name: 'Зам. по безопасности',
+        description: 'Заместитель по безопасности',
+        manager: {
+          name: 'Ярослав Ярославович Ярославов',
+          title: 'Заместитель',
+          photo: null
+        },
+        children: [
+          {
+            id: '10_1',
+            name: 'Служба безопасности',
+            description: 'Служба безопасности предприятия',
+            manager: {
+              name: 'Антон Антонович Антонов',
+              title: 'Начальник службы',
+              photo: null
+            },
+            children: [],
+            showChildren: false,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          },
+          {
+            id: '10_2',
+            name: 'Охрана',
+            description: 'Отдел охраны',
+            manager: {
+              name: 'Богдан Богданович Богданов',
+              title: 'Начальник отдела',
+              photo: null
+            },
+            children: [],
+            showChildren: false,
+            showParents: false,
+            isStaff: false,
+            parent: null
+          }
+        ],
+        showChildren: true,
+        showParents: false,
+        isStaff: false,
+        parent: null
       }
     ],
-    employees: [],
-    showChildren: false,
-    showParents: true,
-    dataFields: []
-  },
-  people: [],
-  assignments: []
+    showChildren: true,
+    showParents: false,
+    isStaff: false,
+    parent: null
+  }
+})
+
+// Устанавливаем родительские ссылки
+const setupParentLinks = (dept, parent = null) => {
+  dept.parent = parent
+  if (dept.children && dept.children.length > 0) {
+    dept.children.forEach(child => {
+      setupParentLinks(child, dept)
+    })
+  }
 }
+
+// Устанавливаем родительские ссылки для всей структуры
+setupParentLinks(INPUT_DATA.value.chart)
 
 export const useOrgChartStore = defineStore('orgChart', () => {
   // State
   const config = ref(CONFIG)
   const updatedOn = ref(UPDATED_ON)
   const uiNames = ref(UINAMES)
-  const chart = ref(INPUT_DATA.chart)
+  const chart = ref(INPUT_DATA.value.chart)
   const people = ref([])
   const assignments = ref([])
-  const orgArray = ref(null)
   const lines = ref([])
-  const showSideScreen = ref(true)
   const columnView = ref(true)
   const columnView_noStaff = ref(true)
   const managerNameView = ref(true)
@@ -132,7 +585,6 @@ export const useOrgChartStore = defineStore('orgChart', () => {
   const showNrDepartments = ref(true)
   const showNrPeople = ref(true)
   const showPerson = ref(null)
-
   const defaultPersonProperties = ref([
     { name: 'Email', type: 'email', order: 0 },
     { name: 'Phone', type: 'text', order: 1 },
@@ -164,18 +616,18 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     let peopleData
 
     // check if the data is saved in old format (array) or new format (tree)
-    if (!INPUT_DATA.api_version) {
+    if (!INPUT_DATA.value.api_version) {
       data = processData()
       createTree(data)
       console.log('Loading OLD input data format')
-    } else if (INPUT_DATA.api_version === '1.0') {
-      data = processData10(INPUT_DATA.chart, [])
-      peopleData = processPeople10(INPUT_DATA.people)
+    } else if (INPUT_DATA.value.api_version === '1.0') {
+      data = processData10(INPUT_DATA.value.chart, [])
+      peopleData = processPeople10(INPUT_DATA.value.people)
       createTree1(data)
       console.log('Loading 1.0 input data format')
-    } else if (INPUT_DATA.api_version === '2.0') {
-      data = processData10(INPUT_DATA.chart, [])
-      peopleData = processPeople10(INPUT_DATA.people)
+    } else if (INPUT_DATA.value.api_version === '2.0') {
+      data = processData10(INPUT_DATA.value.chart, [])
+      peopleData = processPeople10(INPUT_DATA.value.people)
       createTree1(data)
       console.log('Loading 2.0 input data format')
     } else {
@@ -185,10 +637,10 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     processAssignments({
       departments: data.orgArray,
       people: peopleData,
-      assignments: INPUT_DATA.assignments
+      assignments: INPUT_DATA.value.assignments
     })
     setPeople(peopleData)
-    setAssignments(INPUT_DATA.assignments)
+    setAssignments(INPUT_DATA.value.assignments)
 
     // Setup event listeners
     window.onresize = () => {
@@ -206,36 +658,81 @@ export const useOrgChartStore = defineStore('orgChart', () => {
   }
 
   const initZoom = (dept) => {
+    console.log('=== initZoom called ===')
+
     const area = document.querySelector('#chart')
     if (!area) {
-      console.warn('Chart element not found')
+      console.error('Chart element not found for panzoom')
       return
     }
 
-    if (zoomInstance.value) zoomInstance.value.dispose()
+    console.log('Chart element found:', area)
+
+    // Удаляем предыдущий экземпляр
+    if (zoomInstance.value) {
+      console.log('Disposing previous zoom instance')
+      zoomInstance.value.dispose()
+      zoomInstance.value = null
+    }
 
     try {
+      console.log('Creating new panzoom instance...')
+
       const instance = panzoom(area, {
         smoothScroll: false,
         maxZoom: 2,
-        minZoom: 0.2
+        minZoom: 0.2,
+        beforeWheel: function (e) {
+          console.log('=== Wheel event captured by panzoom ===', e)
+          return false
+        },
+        beforeMouseDown: function (e) {
+          console.log('=== Mouse down event captured by panzoom ===', e)
+          return false
+        },
+        beforeTouchStart: function (e) {
+          console.log('=== Touch start event captured by panzoom ===', e)
+          return false
+        },
+        onZoom: function (e) {
+          console.log('=== Zoom event ===', e)
+          // Обновляем линии при зуме
+          setTimeout(() => {
+            refreshLines()
+          }, 100)
+        },
+        onPan: function (e) {
+          console.log('=== Pan event ===', e)
+          // Обновляем линии при перемещении
+          setTimeout(() => {
+            refreshLines()
+          }, 100)
+        }
       })
+
+      console.log('Panzoom instance created successfully:', instance)
 
       setTimeout(() => {
         let pos
         if (dept) {
           pos = getPosOfElement(dept)
-          instance.moveTo(pos.x, pos.y)
-          instance.zoomTo(1)
+          if (pos) {
+            instance.moveTo(pos.element.x, pos.element.y)
+            instance.zoomTo(1)
+            console.log('Moved to department position:', pos)
+          }
         } else {
           instance.moveTo(0, 0)
           instance.zoomTo(1)
+          console.log('Moved to default position')
         }
       }, 100)
 
       zoomInstance.value = instance
+      console.log('Zoom instance stored in store:', zoomInstance.value)
     } catch (error) {
-      console.warn('Panzoom initialization failed:', error)
+      console.error('Panzoom initialization failed:', error)
+      console.error('Error stack:', error.stack)
     }
   }
 
@@ -260,17 +757,44 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     assignments.value = data
   }
 
-  const setActiveDepartment = (dept) => {
-    console.log('Setting active department:', dept)
-    activeDepartment.value = dept
-    console.log('Active department set to:', activeDepartment.value)
+  // Методы для управления департаментами
+  const setActiveDepartment = (department) => {
+    activeDepartment.value = department
+    console.log('Active department set to:', department)
   }
 
-  const setActiveDepartmentById = (deptId) => {
-    const dept = findDept(chart.value, deptId)
+  const setActiveDepartmentById = (id) => {
+    const dept = findDept(chart.value, id)
     if (dept) {
       setActiveDepartment(dept)
     }
+  }
+
+  const findDept = (dept, id) => {
+    if (dept.id === id) return dept
+    for (const child of dept.children || []) {
+      const found = findDept(child, id)
+      if (found) return found
+    }
+    return null
+  }
+
+  const showChildren = (department) => {
+    department.showChildren = true
+    refreshLines()
+  }
+
+  const hideChildren = (department) => {
+    department.showChildren = false
+    refreshLines()
+  }
+
+  const setHideParents = (value) => {
+    onlyShowParents.value = value
+  }
+
+  const setOnlyShowParents = (value) => {
+    onlyShowParents.value = value
   }
 
   const setActiveEmployeeById = (empId) => {
@@ -323,24 +847,31 @@ export const useOrgChartStore = defineStore('orgChart', () => {
   }
 
   const addLine = () => {
-    // Добавляем линию для соединения элементов
-    lines.value.push({})
+    console.log('addLine called')
+    lines.value = updateLines(chart.value, [])
   }
 
-  const setHideParents = (value) => {
-    if (activeDepartment.value) {
-      activeDepartment.value.showParents = !value
+  const refreshLines = () => {
+    console.log('refreshLines called')
+    if (chart.value) {
+      lines.value = updateLines(chart.value, [])
     }
   }
 
-  const setOnlyShowParents = (value) => {
-    onlyShowParents.value = value
-  }
+  const forceUpdateLines = () => {
+    console.log('forceUpdateLines called')
 
-  const showChildren = (dept) => {
-    if (dept) {
-      dept.showChildren = true
-    }
+    // Очищаем текущие линии
+    lines.value = []
+
+    // Ждем стабилизации DOM и пересчитываем линии
+    setTimeout(() => {
+      if (chart.value) {
+        console.log('Recalculating lines after visibility change...')
+        lines.value = updateLines(chart.value, [])
+        console.log('Lines updated:', lines.value.length)
+      }
+    }, 200) // Увеличиваем задержку для полной стабилизации DOM
   }
 
   // Методы для работы с назначениями
@@ -357,15 +888,6 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     if (assignment) {
       assignment.role = role
     }
-  }
-
-  // Методы для боковой панели
-  const closeSideScreen = () => {
-    showSideScreen.value = false
-  }
-
-  const openSideScreen = () => {
-    showSideScreen.value = true
   }
 
   // Дополнительные методы для DepartmentDetails
@@ -424,25 +946,135 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     // Implementation from original store
   }
 
-  const refreshLines = () => {
-    // Implementation from original store
+  const recalculateLinesOnResize = () => {
+    console.log('Recalculating lines on resize...')
+    // Небольшая задержка для стабилизации DOM
+    setTimeout(() => {
+      updateLines(chart.value, [])
+    }, 100)
   }
 
   const getPosOfElement = (dept) => {
-    // Implementation from original store
-    return { x: 0, y: 0 }
+    console.log('getPosOfElement called for dept:', dept.id)
+
+    const parentElement = document.getElementById('ID_' + dept.parent.id)
+    const childElement = document.getElementById('ID_' + dept.id)
+
+    if (!parentElement || !childElement) {
+      console.log('Elements not found for dept:', dept.id)
+      return { parent: null }
+    }
+
+    const pos = {
+      parent: dept.parent
+        ? document
+          .getElementById('ID_' + dept.parent.id)
+          .getBoundingClientRect()
+        : null,
+      element: document
+        .getElementById('ID_' + dept.id)
+        .getBoundingClientRect()
+    }
+
+    const chartpos = document
+      .getElementById('chart')
+      .getBoundingClientRect()
+
+    if (pos.parent) {
+      pos.parent.x = pos.parent.left - chartpos.left
+      pos.parent.y = pos.parent.top - chartpos.top
+    }
+    pos.element.x = pos.element.left - chartpos.left
+    pos.element.y = pos.element.top - chartpos.top
+
+    console.log('Calculated positions (original):', pos)
+    return pos
   }
 
-  const findDept = (chart, deptId) => {
-    if (!chart) return null
-    if (chart.id === deptId) return chart
-    if (chart.children) {
-      for (const child of chart.children) {
-        const found = findDept(child, deptId)
-        if (found) return found
-      }
+  // Функции для работы с линиями (из оригинального проекта)
+  const updateLines = (dept, lines) => {
+    console.log('updateLines called for dept:', dept.id)
+
+    const svg = document.getElementById('svg')
+    const xparent = document.getElementById('chart')
+
+    if (svg && xparent) {
+      svg.style.width = xparent.offsetWidth + 'px'
+      svg.style.height = xparent.offsetHeight + 'px'
     }
-    return null
+
+    let line
+    if (dept.showChildren) {
+      dept.children.forEach(child => {
+        line = getLine(child)
+        if (line) {
+          lines.push(getLine(child))
+          updateLines(child, lines)
+        }
+      })
+    }
+    return lines
+  }
+
+  const getLine = (dept) => {
+    console.log('getLine called for dept:', dept)
+    const pos = getPosOfElement(dept)
+    if (!pos.parent) {
+      console.log('No parent found for dept:', dept.id)
+      return null
+    }
+
+    let d
+    const x = document.getElementById('chart')
+    const scale = 1 / (x.getBoundingClientRect().width / x.offsetWidth)
+
+    if (dept.isStaff) {
+      d =
+        'M' +
+        Math.round(pos.parent.x + pos.parent.width / 2) * scale +
+        ' ' +
+        Math.round(pos.parent.y + pos.parent.height) * scale +
+        ' v' +
+        Math.round(
+          pos.element.bottom -
+          pos.parent.bottom -
+          pos.element.height / 2
+        ) *
+        scale +
+        ' H' +
+        Math.round(pos.element.x + pos.parent.width) * scale
+    } else {
+      d =
+        'M' +
+        Math.round(pos.parent.x + pos.parent.width / 2) * scale +
+        ' ' +
+        Math.round(pos.parent.y + pos.parent.height) * scale +
+        ' V' +
+        Math.round(pos.element.y * scale - 10) +
+        ' H' +
+        Math.round(pos.element.x + pos.parent.width / 2) * scale +
+        ' V' +
+        Math.round(pos.element.y) * scale
+    }
+
+    console.log('Generated line path (original):', d)
+    return { d: d }
+  }
+
+  // Инициализация store
+  const initializeStore = () => {
+    console.log('Initializing store with new data structure')
+
+    // Устанавливаем родительские ссылки
+    setupParentLinks(INPUT_DATA.value.chart)
+
+    // Устанавливаем chart
+    chart.value = INPUT_DATA.value.chart
+
+    // Инициализируем lines
+    updateLines(chart.value, [])
+
+    console.log('Store initialized with chart:', chart.value)
   }
 
   return {
@@ -453,9 +1085,7 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     chart,
     people,
     assignments,
-    orgArray,
     lines,
-    showSideScreen,
     columnView,
     columnView_noStaff,
     managerNameView,
@@ -498,16 +1128,22 @@ export const useOrgChartStore = defineStore('orgChart', () => {
     setZoomInstance,
     resetZoom,
     addLine,
+    forceUpdateLines,
     setHideParents,
     setOnlyShowParents,
     showChildren,
+    hideChildren,
     removeAssignment,
     updateRole,
-    closeSideScreen,
-    openSideScreen,
     updateActiveDepartmentName,
     updateActiveDepartmentDescription,
     updateActiveDepartmentIsStaff,
-    setShowDepartment
+    setShowDepartment,
+    refreshLines,
+    recalculateLinesOnResize,
+    getPosOfElement,
+    updateLines,
+    getLine,
+    initializeStore
   }
 }) 

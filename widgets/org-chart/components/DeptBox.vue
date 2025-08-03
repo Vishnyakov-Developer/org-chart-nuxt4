@@ -3,20 +3,19 @@
     class="dept-box"
     :class="[type, active]"
     :id="'ID_' + departmentData.id"
+    :data-dept-id="departmentData.id"
     @click="setActiveDepartment(departmentData, $event)"
     @touchend="setActiveDepartment(departmentData, $event)"
     @contextmenu.prevent="showCtxMenu(departmentData, $event)"
     @mouseenter="mouseOverBox(true)"
     @mouseleave="mouseOverBox(false)"
   >
-    <i
+    <ChevronUpIcon
       v-if="displaySiblingIcon"
-      class="material-icons view_button"
-      @click="showViewMenu(departmentData, $event)"
+      class="view-button"
+      @click="handleShowViewMenu(departmentData, $event)"
       title="Show/hide parents"
-    >
-      visibility
-    </i>
+    />
 
     <table>
       <tbody>
@@ -24,16 +23,16 @@
           <td class="ppl_count0">
             <div v-if="showNrPeople" class="ppl_count">
               <div
-                v-if="departmentData.employees.length"
+                v-if="departmentData.children.length"
                 class="ppl_count_nr"
                 :title="
-                  departmentData.employees.length +
-                  (departmentData.employees.length === 1
-                    ? ' person in this department'
-                    : ' people in this department')
+                  departmentData.children.length +
+                  (departmentData.children.length === 1
+                    ? ' subdepartment'
+                    : ' subdepartments')
                 "
               >
-                {{ departmentData.employees.length }}
+                {{ departmentData.children.length }}
               </div>
             </div>
           </td>
@@ -47,7 +46,9 @@
                 config.photoUrl.suffix
               "
             />
-            <div v-else class="material-icons nophoto">face</div>
+            <div v-else class="initials-circle">
+              {{ getInitials(departmentData.manager.name) }}
+            </div>
           </td>
           <td>
             <div
@@ -73,22 +74,18 @@
           <td class="drill0">
             <div class="drill">
               <template v-if="departmentData.children.length">
-                <i
+                <ChevronDownIcon
                   v-if="!departmentData.showChildren"
-                  class="material-icons arrow down"
+                  class="arrow down"
                   @click.prevent="doShowChildren(true)"
                   @touchend.prevent="doShowChildren(true)"
-                >
-                  arrow_drop_down
-                </i>
-                <i
+                />
+                <ChevronUpIcon
                   v-if="departmentData.showChildren"
-                  class="material-icons arrow up"
+                  class="arrow up"
                   @click.prevent="doShowChildren(false)"
                   @touchend.prevent="doShowChildren(false)"
-                >
-                  arrow_drop_up
-                </i>
+                />
                 <template v-if="showNrDepartments">
                   <div
                     v-if="!departmentData.showChildren"
@@ -100,7 +97,8 @@
                       ' subdepartment' +
                       (departmentData.children.length === 1
                         ? ''
-                        : 's')
+                        : 's') +
+                      ' hidden'
                     "
                   >
                     {{ departmentData.children.length }}
@@ -111,6 +109,7 @@
                     @click.prevent="doShowChildren(false)"
                     @touchend.prevent="doShowChildren(false)"
                     :title="
+                      'Hide ' +
                       departmentData.children.length +
                       ' subdepartment' +
                       (departmentData.children.length === 1
@@ -131,8 +130,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useOrgChartStore } from '../stores/orgChart'
+import {
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from '@heroicons/vue/24/outline'
 
 // Props
 const props = defineProps({
@@ -143,7 +146,7 @@ const props = defineProps({
   level: {
     type: Number,
     required: true,
-    default: 1,
+    default: 0,
   },
   type: {
     type: String,
@@ -154,49 +157,85 @@ const props = defineProps({
 // Store
 const store = useOrgChartStore()
 
+// Local state
+const mouseOver = ref(false)
+
 // Computed from store
 const config = computed(() => store.config)
+const activeDepartment = computed(() => store.activeDepartment)
+const showNrDepartments = computed(() => store.showNrDepartments)
+const showNrPeople = computed(() => store.showNrPeople)
 const managerNameView = computed(() => store.managerNameView)
 const managerPhotoView = computed(() => store.managerPhotoView)
-const showNrPeople = computed(() => store.showNrPeople)
-const showNrDepartments = computed(() => store.showNrDepartments)
-const activeDepartment = computed(() => store.activeDepartment)
+const editMode = computed(() => store.editMode)
+const showEditMenu = computed(() => store.showEditMenu)
+const showViewMenu = computed(() => store.showViewMenu)
+const moveDepartment = computed(() => store.moveDepartment)
 
 // Computed
 const active = computed(() => {
-  return activeDepartment.value &&
+  return (
+    activeDepartment.value &&
     activeDepartment.value.id === props.departmentData.id
-    ? 'active'
-    : ''
+  )
 })
 
 const displaySiblingIcon = computed(() => {
   return (
     props.departmentData.parent &&
-    props.departmentData.parent.children.length > 1
+    props.departmentData.parent.showParents
   )
 })
 
 // Methods
-const setActiveDepartment = (dept, event) => {
-  store.setActiveDepartment(dept)
+const setActiveDepartment = (department, event) => {
+  store.setActiveDepartment(department)
+
+  if (event && event.type === 'contextmenu') {
+    event.preventDefault()
+    store.setShowEditMenu(event)
+  }
 }
 
-const showCtxMenu = (dept, event) => {
-  // Context menu logic
+const showCtxMenu = (department, event) => {
+  store.setShowEditMenu(event)
 }
 
-const mouseOverBox = (isOver) => {
-  // Mouse over logic
+const handleShowViewMenu = (department, event) => {
+  store.setShowViewMenu(event)
 }
 
-const showViewMenu = (dept, event) => {
-  // View menu logic
+const mouseOverBox = (value) => {
+  mouseOver.value = value
 }
 
-const doShowChildren = (show) => {
-  props.departmentData.showChildren = show
+const doShowChildren = (value) => {
+  props.departmentData.showChildren = value
+
+  // Принудительно обновляем линии с задержкой для стабилизации DOM
+  setTimeout(() => {
+    store.forceUpdateLines()
+  }, 100)
 }
+
+const getInitials = (name) => {
+  if (!name) return '?'
+  return name
+    .split(' ')
+    .map((word) => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+// Debug
+onMounted(() => {
+  console.log(
+    'DeptBox mounted with ID:',
+    'ID_' + props.departmentData.id
+  )
+  console.log('Department data:', props.departmentData)
+})
 </script>
 
 <style scoped>
@@ -209,7 +248,10 @@ const doShowChildren = (show) => {
   background-color: white;
   cursor: pointer;
   position: relative;
-  min-width: 150px;
+  width: 200px; /* Статичная ширина */
+  min-width: 200px; /* Минимальная ширина */
+  max-width: 200px; /* Максимальная ширина */
+  pointer-events: auto;
 }
 
 .dept-box:hover {
@@ -255,11 +297,33 @@ const doShowChildren = (show) => {
   object-fit: cover;
 }
 
-.nophoto {
+.initials-circle {
   width: 40px;
   height: 40px;
-  font-size: 40px;
-  color: #ccc;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.view-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.view-button:hover {
+  color: #007bff;
 }
 
 .level_indicator {
@@ -268,50 +332,83 @@ const doShowChildren = (show) => {
   position: absolute;
   left: 0;
   top: 0;
+  border-radius: 2px 0 0 2px;
 }
 
 .textdiv {
-  padding: 5px;
+  position: relative;
+  padding: 10px;
   text-align: center;
+  width: 160px; /* Статичная ширина */
+  min-width: 160px; /* Минимальная ширина */
+  max-width: 160px; /* Максимальная ширина */
 }
 
 .name {
   font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 2px;
+  font-size: 16px;
+  margin-bottom: 5px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .name_manager {
   font-size: 12px;
   color: #666;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
-.drill0 {
-  width: 30px;
+.drill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .arrow {
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  font-size: 20px;
   color: #007bff;
+  transition: color 0.2s;
+}
+
+.arrow:hover {
+  color: #0056b3;
+}
+
+.arrow.down {
+  transform: rotate(0deg);
+}
+
+.arrow.up {
+  transform: rotate(180deg);
 }
 
 .hidden_dept {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 3px;
+  padding: 2px 6px;
   font-size: 12px;
   color: #666;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.view_button {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 16px;
-  color: #666;
-  cursor: pointer;
+.hidden_dept:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
 }
 
-.view_button:hover {
-  color: #007bff;
+.hidden_dept.down {
+  color: #28a745;
+}
+
+.hidden_dept.up {
+  color: #dc3545;
 }
 </style>
